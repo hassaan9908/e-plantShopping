@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './ProductList.css'
 import CartItem from './CartItem';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem } from './CartSlice';
+
 function ProductList({ onHomeClick }) {
     const [showCart, setShowCart] = useState(false);
-    const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
+    const [showPlants, setShowPlants] = useState(true); // Set to true by default
+    const dispatch = useDispatch();
+    const cartItems = useSelector((state) => state.cart.items);
+    const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     const plantsArray = [
         {
@@ -218,7 +224,7 @@ function ProductList({ onHomeClick }) {
         padding: '15px',
         display: 'flex',
         justifyContent: 'space-between',
-        alignIems: 'center',
+        alignItems: 'center',
         fontSize: '20px',
     }
     const styleObjUl = {
@@ -231,6 +237,22 @@ function ProductList({ onHomeClick }) {
         color: 'white',
         fontSize: '30px',
         textDecoration: 'none',
+    }
+
+    const cartIconStyle = {
+        position: 'relative',
+        cursor: 'pointer',
+    }
+
+    const cartCountStyle = {
+        position: 'absolute',
+        top: '-8px',
+        right: '-8px',
+        backgroundColor: 'red',
+        color: 'white',
+        borderRadius: '50%',
+        padding: '2px 6px',
+        fontSize: '12px',
     }
 
     const handleHomeClick = (e) => {
@@ -252,34 +274,53 @@ function ProductList({ onHomeClick }) {
         e.preventDefault();
         setShowCart(false);
     };
+
+    const handleAddToCart = (plant) => {
+        dispatch(addItem(plant));
+    };
+
     return (
         <div>
-            <div className="navbar" style={styleObj}>
-                <div className="tag">
-                    <div className="luxury">
-                        <img src="https://cdn.pixabay.com/photo/2020/08/05/13/12/eco-5465432_1280.png" alt="" />
-                        <a href="/" onClick={(e) => handleHomeClick(e)}>
-                            <div>
-                                <h3 style={{ color: 'white' }}>Paradise Nursery</h3>
-                                <i style={{ color: 'white' }}>Where Green Meets Serenity</i>
-                            </div>
+            <div style={styleObj}>
+                <ul style={styleObjUl}>
+                    <li><a href="#" onClick={handleHomeClick} style={styleA}>Home</a></li>
+                    <li><a href="#" onClick={handlePlantsClick} style={styleA}>Plants</a></li>
+                    <li style={cartIconStyle}>
+                        <a href="#" onClick={handleCartClick} style={styleA}>
+                            🛒
+                            {cartCount > 0 && <span style={cartCountStyle}>{cartCount}</span>}
                         </a>
-                    </div>
-
-                </div>
-                <div style={styleObjUl}>
-                    <div> <a href="#" onClick={(e) => handlePlantsClick(e)} style={styleA}>Plants</a></div>
-                    <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}><h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg></h1></a></div>
-                </div>
+                    </li>
+                </ul>
             </div>
-            {!showCart ? (
-                <div className="product-grid">
 
-
-                </div>
-            ) : (
+            {showCart ? (
                 <CartItem onContinueShopping={handleContinueShopping} />
-            )}
+            ) : showPlants ? (
+                <div className="plants-container">
+                    {plantsArray.map((category, index) => (
+                        <div key={index} className="category-section">
+                            <h2>{category.category}</h2>
+                            <div className="plants-grid">
+                                {category.plants.map((plant, plantIndex) => (
+                                    <div key={plantIndex} className="plant-card">
+                                        <img src={plant.image} alt={plant.name} />
+                                        <h3>{plant.name}</h3>
+                                        <p>{plant.description}</p>
+                                        <p className="price">{plant.cost}</p>
+                                        <button 
+                                            className="add-to-cart-btn"
+                                            onClick={() => handleAddToCart(plant)}
+                                        >
+                                            Add to Cart
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
         </div>
     );
 }
